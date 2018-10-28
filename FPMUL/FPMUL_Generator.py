@@ -1,50 +1,54 @@
+from IEEE754 import IEEE754
 from random import randint
 
 class FPMUL_Generator():
     @staticmethod
     def randomFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = randint(0, 0xFF)
-            mantissa = randint(0, 0x7FFFFF)
-            yield sign, exponent, mantissa
+        """Random Float"""
+        sign     = randint(0, 1)
+        exponent = randint(0, 0xFF)
+        mantissa = randint(0, 0x7FFFFF)
+        yield IEEE754(sign, exponent, mantissa)
 
     @staticmethod
     def randomNormalFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = randint(1, 0xFE)
-            mantissa = randint(0, 0x7FFFFF)
-            yield sign, exponent, mantissa
+        """Random Normal Float"""
+        sign     = randint(0, 1)
+        exponent = randint(1, 0xFE)
+        mantissa = randint(0, 0x7FFFFF)
+        yield IEEE754(sign, exponent, mantissa)
 
     @staticmethod
     def randomNanFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = 0xFF
-            mantissa = randint(1, 0x7FFFFF)
-            yield sign, exponent, mantissa
+        """Random NaN Float"""
+        sign     = randint(0, 1)
+        exponent = 0xFF
+        mantissa = randint(1, 0x7FFFFF)
+        yield IEEE754(sign, exponent, mantissa)
 
     @staticmethod
     def randomDenormalizedFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = 0
-            mantissa = randint(1, 0x7FFFFF)
-            yield sign, exponent, mantissa
+        """Random Denormalized Float"""
+        sign     = randint(0, 1)
+        exponent = 0
+        mantissa = randint(1, 0x7FFFFF)
+        yield IEEE754(sign, exponent, mantissa)
 
     @staticmethod
     def randomZeroFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = 0
-            mantissa = 0
-            yield sign, exponent, mantissa
+        """Random Zero Float"""
+        sign     = randint(0, 1)
+        exponent = 0
+        mantissa = 0
+        yield IEEE754(sign, exponent, mantissa)
 
     @staticmethod
     def randomInfinityFloat():
-        while True:
-            sign     = randint(0, 1)
-            exponent = 0xFF
-            mantissa = 0
-            yield sign, exponent, mantissa
+        """Random Infinity Float"""
+        sign     = randint(0, 1)
+        exponent = 0xFF
+        mantissa = 0
+        yield IEEE754(sign, exponent, mantissa)
+
+   
+

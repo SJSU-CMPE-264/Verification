@@ -1,4 +1,5 @@
 import numpy as np
+import struct
 
 class IEEE754:      
     def __init__(self, *args, **kwargs):
@@ -67,14 +68,15 @@ class IEEE754:
             raise ValueError("Binary String is too short")
         elif len(bin_str) > 32:
             raise ValueError("Binary String is too long")
-        byte = int(bin_str, 2).to_bytes(4, byteorder="little")
+        bin_str = bin_str.lower().replace("z", "0").replace("x", "0")
+        byte = struct.pack("<I", int(bin_str, 2))
         return np.frombuffer(byte, dtype=np.float32)[0]
 
     def floatToStr(self):
-        mv = memoryview(self.float)
-        bin_str = ""
-        for i in range(4):
-            bin_str += "{:08b}".format(mv[3-i])
+        mv      = np.getbuffer(self.float)
+        mv_str  = "".join(mv)
+        value   = struct.unpack("<I", mv_str)[0]
+        bin_str = "{:032b}".format(value)
         return bin_str
 
     def floatToBits(self):

@@ -1,15 +1,16 @@
-import IEEE754
+from IEEE754 import IEEE754
 
-import FPMUL_InputMonitor
-import FPMUL_OutputMonitor
-import FPMUL_Scoreboard
-import FPMUL_Generator
+from FPMUL_InputMonitor import FPMUL_InputMonitor
+from FPMUL_OutputMonitor import FPMUL_OutputMonitor
+from FPMUL_Scoreboard import FPMUL_Scoreboard
+from FPMUL_Driver import FPMUL_Driver
+from FPMUL_Generator import FPMUL_Generator
 
 import cocotb
-from cocotb.decorators import coroutine
 from cocotb.triggers import Timer, RisingEdge, ReadOnly
 from cocotb.drivers import BitDriver
 from cocotb.binary import BinaryValue
+from cocotb.regression import TestFactory
 
 
 class FPMUL_TB(object):
@@ -25,7 +26,7 @@ class FPMUL_TB(object):
         # Create input driver and output monitor
         self.input_driver = FPMUL_Driver()
         
-        self.output_monitor = FPMUL_OutputMonitor(dut.Done, dut.Clk)
+        self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk)
         
         # Create a scoreboard on the outputs
         self.expected_output = [ ]
@@ -34,7 +35,7 @@ class FPMUL_TB(object):
 
         # Reconstruct the input transactions from the pins
         # and send them to our 'model'
-        self.input_monitor = FPMUL_InputMonitor(dut.Start, dut.Clk, callback=self.model)
+        self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
 
     def model(self, transaction):
         if not self.stopped:
@@ -44,7 +45,7 @@ class FPMUL_TB(object):
 
     def start(self):
         """Start generation of input data."""
-        self.input_driver.start()
+        # self.input_driver.start()
 
     def stop(self):
         """
@@ -52,7 +53,7 @@ class FPMUL_TB(object):
         Also stop generation of expected output transactions.
         One more clock cycle must be executed afterwards, so that, output of
         """
-        self.input_driver.stop()
+        # self.input_driver.stop()
         self.stopped = True
 
 # ==============================================================================
@@ -75,8 +76,12 @@ def run_test(dut, A, B):
 
     # Apply random input data by input_gen via Driver for 100 clock cycle.
     tb.start()
-    dut.A = A.floatToBinary()
-    dut.B = B.floatToBinary()
+    dut.Start = 0
+    for lhs in A():
+        dut.A = int(lhs.floatToStr(), 2)
+    for rhs in B():
+        dut.B = int(rhs.floatToStr(), 2)
+    yield clk_edge
     dut.Start = 1
     yield clk_edge
     while not dut.Done:

@@ -1,7 +1,8 @@
 from cocotb.drivers import Driver
+from cocotb.decorators import coroutine
 
 class FPMUL_Driver(Driver):
-    def __init__(self, entity, name, clock, generator=None):
+    def __init__(self, generator=None):
         Driver.__init__(self)
         self.generator = generator
 
