@@ -12,7 +12,7 @@ from cocotb.drivers import BitDriver
 from cocotb.binary import BinaryValue
 
 
-class FPMUL_TB:
+class FPMUL_TB(object):
     def __init__(self, dut):
         """
         
