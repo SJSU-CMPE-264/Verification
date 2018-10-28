@@ -22,6 +22,7 @@ class FPMUL_TB(object):
         # Some internal state
         self.dut = dut
         self.stopped = False
+        self.done = dut.Done
 
         # Create input driver and output monitor
         self.input_driver = FPMUL_Driver()
@@ -38,7 +39,7 @@ class FPMUL_TB(object):
         self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
 
     def model(self, transaction):
-        if not self.stopped:
+        if self.done:
             A, B = transaction
             product = A * B
             self.expected_output.append((A, B, product))
@@ -74,9 +75,11 @@ def run_test(dut, A, B):
     tb = FPMUL_TB(dut)
     clk_edge = RisingEdge(dut.Clk)
 
+
     # Apply random input data by input_gen via Driver for 100 clock cycle.
-    tb.start()
+    # tb.start()
     dut.Start = 0
+
     for lhs in A():
         dut.A = int(lhs.floatToStr(), 2)
     for rhs in B():
@@ -89,7 +92,7 @@ def run_test(dut, A, B):
 
     # Stop generation of input data. One more clock cycle is needed to capture
     # the resulting output of the DUT.
-    tb.stop()
+    # tb.stop()
 
     # Print result of scoreboard.
     raise tb.scoreboard.result
