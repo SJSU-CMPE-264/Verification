@@ -12,9 +12,10 @@ from cocotb.drivers import BitDriver
 from cocotb.binary import BinaryValue
 from cocotb.regression import TestFactory
 
+import logging
 
 class FPMUL_TB(object):
-    def __init__(self, dut):
+    def __init__(self, dut, debug=False):
         """
         
         """
@@ -37,6 +38,11 @@ class FPMUL_TB(object):
         # Reconstruct the input transactions from the pins
         # and send them to our 'model'
         self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
+
+        # Set verbosity on our various interfaces
+        level = logging.DEBUG if debug else logging.WARNING
+        self.input_driver.log.setLevel(level)
+        self.input_monitor.log.setLevel(level)
 
     def model(self, transaction):
         if self.done:

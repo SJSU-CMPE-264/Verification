@@ -9,6 +9,7 @@ class FPMUL_Scoreboard(Scoreboard):
 
         def compare(self, received, exp, log, strict_type=True):
             lhs, rhs, expected = exp
+            log.info("Testing testing 123 hello hello")
 
             # Compare the types
             if strict_type and type(received) != type(expected):
