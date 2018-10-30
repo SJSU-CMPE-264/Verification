@@ -96,10 +96,11 @@ class FPMUL_TB(object):
 # ==============================================================================
 @cocotb.coroutine
 def run_test(dut, A, B):
+    dut._log.info("entering run_test")
     """Setup testbench and run a test."""
     # cocotb.fork(clock_gen(dut.Clk))
     cocotb.fork(Clock(dut.Clk, 5000).start())
-    tb = FPMUL_TB(dut)
+    tb = FPMUL_TB(dut) # _monitor_recv() fired by both InMon and OutMon here
     clk_edge = RisingEdge(dut.Clk)
 
     """
@@ -125,7 +126,7 @@ def run_test(dut, A, B):
     yield tb.reset()
     dut.Start <= 1
 
-    # dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     for transaction in A():
         yield tb.input_driver_A._driver_send(transaction)
@@ -133,7 +134,7 @@ def run_test(dut, A, B):
     for transaction in B():
         yield tb.input_driver_B._driver_send(transaction)
 
-    # dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
 
     # We're not using a driver on Start or Rst yet, since we're not doing tests on those yet.
@@ -148,7 +149,7 @@ def run_test(dut, A, B):
             break
         yield clk_edge
     
-    # dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     if DoneFlag:
         dut._log.info("Done flag raised")

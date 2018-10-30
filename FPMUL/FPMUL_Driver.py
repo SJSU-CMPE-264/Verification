@@ -24,9 +24,8 @@ NOPE. We need to define _driver_send()
 """
 
 class FPMUL_OperandDriver(BusDriver):
-    def __init__(self, entity, name, clock, _signals, generator=None):
+    def __init__(self, entity, name, clock, _signals):
         self._signals = _signals
-        self.generator = generator
         self.clock = clock
         BusDriver.__init__(self, entity, name, clock)
 

@@ -25,7 +25,8 @@ class FPMUL_InputMonitor(Monitor):
         while True:
             yield clk_edge
 
-            if self.txn_valid:
+            if self.txn_valid is True:
+                self.dut._log.info("Forming the lhs and rhs inside InputMonitor")
                 lhs = IEEE754(self.dut.A.value.binstr.zfill(32))
                 rhs = IEEE754(self.dut.B.value.binstr.zfill(32))
                 ## grab needed info off the bus to create
