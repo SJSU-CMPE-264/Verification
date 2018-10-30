@@ -26,6 +26,7 @@ class FPMUL_OperandDriver(BusDriver):
     def __init__(self, entity, name, clock, _signals, generator=None):
         self._signals = _signals
         self.generator = generator
+        self.clock = clock
         BusDriver.__init__(self, entity, name, clock)
 
     @coroutine
@@ -37,6 +38,9 @@ class FPMUL_OperandDriver(BusDriver):
         # sign, exponent, mantissa = self.generator()
         # return IEEE(sign, exponent, mantissa)
         '''
+        if sync:
+            yield RisingEdge(self.clock)
+
         word = BinaryValue(bits=32, bigEndian=False)
         word.binstr = transaction
         self.bus <= transaction

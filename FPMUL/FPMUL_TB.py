@@ -67,7 +67,7 @@ class FPMUL_TB(object):
         self.dut._log.info("Resetting DUT")
         self.dut.Rst   <= 1
         self.dut.Start <= 0
-        yield Timer(duration)
+        # yield Timer(duration)
         yield RisingEdge(self.dut.Clk)
         self.dut.Rst   <= 0
         self.dut._log.info("Out of reset")

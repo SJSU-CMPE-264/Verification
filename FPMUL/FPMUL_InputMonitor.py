@@ -3,6 +3,12 @@ from cocotb.decorators import coroutine
 from cocotb.monitors import Monitor
 from cocotb.triggers import RisingEdge
 
+'''
+ntwong0
+Perhaps we need to use BusMonitor rather than Monitor
+How do we restrict the InputMonitor from sending data?
+'''
+
 class FPMUL_InputMonitor(Monitor):
     def __init__(self, dut, txn_valid, clock, callback=None, event=None):
         self.name = "input"
@@ -20,8 +26,8 @@ class FPMUL_InputMonitor(Monitor):
             yield clk_edge
 
             if self.txn_valid:
-                lhs = IEEE754(self.dut.A.value.binstr.zfill(0))
-                rhs = IEEE754(self.dut.B.value.binstr.zfill(0))
+                lhs = IEEE754(self.dut.A.value.binstr.zfill(32))
+                rhs = IEEE754(self.dut.B.value.binstr.zfill(32))
                 ## grab needed info off the bus to create
                 ## floating point class
                 self._recv((lhs, rhs))
