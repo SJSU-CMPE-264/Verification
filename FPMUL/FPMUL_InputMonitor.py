@@ -13,7 +13,7 @@ class FPMUL_InputMonitor(Monitor):
 
     @coroutine
     def _monitor_recv(self):
-
+        self.dut._log.info("InputMonitor received something")
         clk_edge = RisingEdge(self.clock)
 
         while True:
