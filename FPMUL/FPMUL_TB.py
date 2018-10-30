@@ -13,6 +13,7 @@ from cocotb.binary import BinaryValue
 from cocotb.regression import TestFactory
 
 import logging
+from cocotb.scoreboard import Scoreboard
 
 class FPMUL_TB(object):
     def __init__(self, dut, debug=False):
@@ -31,8 +32,9 @@ class FPMUL_TB(object):
         self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk)
         
         # Create a scoreboard on the outputs
-        self.expected_output = [ ]
-        self.scoreboard = FPMUL_Scoreboard(dut) #create a floating point scoreboard? mostly just to check and log flags
+        self.expected_output = []
+        self.scoreboard = Scoreboard(dut)
+        #self.scoreboard = FPMUL_Scoreboard(dut) #create a floating point scoreboard? mostly just to check and log flags
         self.scoreboard.add_interface(self.output_monitor, self.expected_output)
 
         # Reconstruct the input transactions from the pins
@@ -86,8 +88,10 @@ def run_test(dut, A, B):
     # tb.start()
     dut.Start = 0
 
-    for lhs in A():
+    for lhs in A(): 
         dut.A = int(lhs.floatToStr(), 2)
+        # Wait no - don't do this; the driver is supposed to set the bits
+        # run_test() shouldn't set the bits directly
     for rhs in B():
         dut.B = int(rhs.floatToStr(), 2)
     yield clk_edge
