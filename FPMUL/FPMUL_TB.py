@@ -2,7 +2,7 @@ from IEEE754 import IEEE754
 
 from FPMUL_InputMonitor import FPMUL_InputMonitor
 from FPMUL_OutputMonitor import FPMUL_OutputMonitor
-from FPMUL_Scoreboard import FPMUL_Scoreboard as Scoreboard
+from FPMUL_Scoreboard import FPMUL_Scoreboard
 from FPMUL_Driver import FPMUL_OperandDriver
 from FPMUL_Generator import FPMUL_Generator
 
@@ -24,8 +24,7 @@ class FPMUL_TB(object):
 
         # Some internal state
         self.dut = dut
-        self.stopped = False
-        self.done = dut.Done
+        # self.stopped = False
 
         # Create input driver and output monitor
         """
@@ -40,25 +39,31 @@ class FPMUL_TB(object):
         # self.input_driver_Start = FPMUL_BusDriver(dut, "", dut.Clk, "Start")
         # self.input_driver_Rst   = FPMUL_BusDriver(dut, "", dut.Clk, "Rst")
         
-        self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk)
-        
-        # Create a scoreboard on the outputs
-        self.expected_output = []
-        self.scoreboard = Scoreboard(dut)
-        #self.scoreboard = FPMUL_Scoreboard(dut) #create a floating point scoreboard? mostly just to check and log flags
-        self.scoreboard.add_interface(self.output_monitor, self.expected_output)
-
         # Reconstruct the input transactions from the pins
         # and send them to our 'model'
         self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
+        self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk)
+        # self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk, callback=self.whywhywhy)
+        
+        # Create a scoreboard on the outputs
+        self.expected_output = []
+        self.observed_output = []
+        # self.scoreboard = Scoreboard(dut)
+        self.scoreboard = FPMUL_Scoreboard(dut) #create a floating point scoreboard? mostly just to check and log flags
+        self.scoreboard.add_interface(self.output_monitor, self.expected_output)
 
     def model(self, transaction):
         self.dut._log.info("model is called")
-        if self.dut.Start is True:
-            A, B = transaction
-            product = A * B
-            self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
-            self.expected_output.append((A, B, product))
+        # if self.dut.Start is True:
+        A, B = transaction
+        product = A * B
+        self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
+        self.expected_output.append((A, B, product))
+    
+    # def whywhywhy(self, transaction):
+    #     self.dut._log.info("whyyyyyyyyy")
+    #     # if self.dut.Done is True:
+    #     self.observed_output.append((transaction))
 
     def start(self):
         """Start generation of input data."""
@@ -69,19 +74,19 @@ class FPMUL_TB(object):
         self.dut._log.info("Resetting DUT")
         self.dut.Rst   <= 1
         self.dut.Start <= 0
-        # yield Timer(duration)
+        yield Timer(duration)
         yield RisingEdge(self.dut.Clk)
         self.dut.Rst   <= 0
         self.dut._log.info("Out of reset")
 
-    def stop(self):
-        """
-        Stop generation of input data. 
-        Also stop generation of expected output transactions.
-        One more clock cycle must be executed afterwards, so that, output of
-        """
-        # self.input_driver.stop()
-        self.stopped = True
+    # def stop(self):
+    #     """
+    #     Stop generation of input data. 
+    #     Also stop generation of expected output transactions.
+    #     One more clock cycle must be executed afterwards, so that, output of
+    #     """
+    #     # self.input_driver.stop()
+    #     self.stopped = True
 
 # ==============================================================================
 # @cocotb.coroutine
@@ -96,9 +101,7 @@ class FPMUL_TB(object):
 # ==============================================================================
 @cocotb.coroutine
 def run_test(dut, A, B):
-    dut._log.info("entering run_test")
     """Setup testbench and run a test."""
-    # cocotb.fork(clock_gen(dut.Clk))
     cocotb.fork(Clock(dut.Clk, 5000).start())
     tb = FPMUL_TB(dut) # _monitor_recv() fired by both InMon and OutMon here
     clk_edge = RisingEdge(dut.Clk)
@@ -124,27 +127,27 @@ def run_test(dut, A, B):
     """
 
     yield tb.reset()
-    dut.Start <= 1
 
     dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     for transaction in A():
         yield tb.input_driver_A._driver_send(transaction)
-    
+
     for transaction in B():
         yield tb.input_driver_B._driver_send(transaction)
 
     dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
-
     # We're not using a driver on Start or Rst yet, since we're not doing tests on those yet.
     DoneFlag = 0
     
+    dut.Start <= 1
     yield clk_edge
     dut.Start <= 0
 
     for i in range(10):
-        if dut.Done:
+        dut._log.info("Iter %i, Done %i, cnt %i", i, dut.Done, dut.cnt)
+        if dut.Done == 1: # ntwong0 - this comparison seems to be most effective
             DoneFlag = 1
             break
         yield clk_edge
@@ -156,12 +159,14 @@ def run_test(dut, A, B):
     else:
         raise TestFailure("No done flag here")
 
+    yield clk_edge
 
     # Stop generation of input data. One more clock cycle is needed to capture
     # the resulting output of the DUT.
     # tb.stop()
 
     # Print result of scoreboard.
+    dut._log.info("about to raise scoreboard.result")
     raise tb.scoreboard.result
 
 # ==============================================================================

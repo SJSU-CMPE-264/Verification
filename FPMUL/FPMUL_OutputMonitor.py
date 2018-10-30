@@ -13,13 +13,16 @@ class FPMUL_OutputMonitor(Monitor):
 
     @coroutine
     def _monitor_recv(self):
-        self.dut._log.info("OutputMonitor received something")
+        self.dut._log.info("OutputMonitor _monitor_recv started")
         clk_edge = RisingEdge(self.clock)
+        count = 0
 
         while True:
-            yield clk_edge
-            if self.txn_valid is True: # ntwong0 - looks like you need to explicitly specify that you are checking this parameter against True, because Python
-                self.dut._log.info("OutputMonitor thinks dut.Done is asserted, even though dut.Done is %x. Compare to %x", self.dut.Done, self.txn_valid)
+            self.dut._log.info("OutputMonitor _monitor_recv iter %i", count)
+            count = count + 1
+
+            if str(self.txn_valid.value) == "1": # ntwong0 - looks like you need to explicitly specify that you are checking this parameter against True, because Python
+                self.dut._log.info("OutputMonitor: dut.Done asserted, forming product ")
                 product = IEEE754(
                             self.dut.P.value.binstr.zfill(32),
                             OF   = int(self.dut.OF),
@@ -30,3 +33,5 @@ class FPMUL_OutputMonitor(Monitor):
                             ZF   = int(self.dut.ZF)
                         )
                 self._recv(product)
+            
+            yield clk_edge

@@ -32,10 +32,10 @@ module FPMUL (
     
     always@(posedge Clk)
     begin
-             if (Rst)               cnt = 0;
+             if (Rst)               begin cnt = 0; Done = 0; end
         else if (Start && cnt == 0) cnt = 1;
         else if (cnt < 4)           cnt = cnt + 1;
-        else                        Done = 1;
+        else if (cnt >= 4)          Done = 1;
     end
     
 endmodule
