@@ -17,13 +17,14 @@ from cocotb.generators.byte import random_data, get_bytes
 from cocotb.clock import Clock
 
 class FPMUL_TB(object):
-    def __init__(self, dut, debug=False):
+    def __init__(self, dut, initSig, debug=False):
         """
         
         """
 
         # Some internal state
         self.dut = dut
+        self.initSig = initSig
         # self.stopped = False
 
         # Create input driver and output monitor
@@ -42,7 +43,7 @@ class FPMUL_TB(object):
         # Reconstruct the input transactions from the pins
         # and send them to our 'model'
         self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
-        self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk)
+        self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk, self.initSig)
         # self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk, callback=self.whywhywhy)
         
         # Create a scoreboard on the outputs
@@ -57,8 +58,14 @@ class FPMUL_TB(object):
         # if self.dut.Start is True:
         A, B = transaction
         product = A * B
-        self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
-        self.expected_output.append((A, B, product))
+        """ 
+        ntwong0 - just append product, exclude A and B since we are not appending 
+            A or B in OutputMonitor
+        # self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
+        # self.expected_output.append((A, B, product))
+         """
+        self.dut._log.info("model is appending product: %s", product)
+        self.expected_output.append(product)
     
     # def whywhywhy(self, transaction):
     #     self.dut._log.info("whyyyyyyyyy")
@@ -103,7 +110,8 @@ class FPMUL_TB(object):
 def run_test(dut, A, B):
     """Setup testbench and run a test."""
     cocotb.fork(Clock(dut.Clk, 5000).start())
-    tb = FPMUL_TB(dut) # _monitor_recv() fired by both InMon and OutMon here
+    initSig = [0]
+    tb = FPMUL_TB(dut, initSig) # _monitor_recv() fired by both InMon and OutMon here
     clk_edge = RisingEdge(dut.Clk)
 
     """
@@ -127,6 +135,14 @@ def run_test(dut, A, B):
     """
 
     yield tb.reset()
+    """
+    ntwong0 - the reason test_endian_swapper.py uses dut.stream_out_ready is to guard against 
+        the residual dut.Done. So, we need a similar signal here.
+
+        initSig: we declare this before FPMUL_TB, and we manipulate it here in run_test
+    """
+    initSig[0] = 1
+
 
     dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
@@ -147,11 +163,13 @@ def run_test(dut, A, B):
 
     for i in range(10):
         dut._log.info("Iter %i, Done %i, cnt %i", i, dut.Done, dut.cnt)
+        dut._log.info("run_test initSig %i", initSig[0])
         if dut.Done == 1: # ntwong0 - this comparison seems to be most effective
             DoneFlag = 1
             break
         yield clk_edge
     
+    initSig[0] = 0
     dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     if DoneFlag:
