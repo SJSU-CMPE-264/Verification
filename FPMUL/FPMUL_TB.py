@@ -53,9 +53,11 @@ class FPMUL_TB(object):
         self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
 
     def model(self, transaction):
-        if self.done:
+        self.dut._log.info("model is called")
+        if self.dut.Start is True:
             A, B = transaction
             product = A * B
+            self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
             self.expected_output.append((A, B, product))
 
     def start(self):
@@ -121,27 +123,38 @@ def run_test(dut, A, B):
     """
 
     yield tb.reset()
-    dut.Start <= 1 
-    
+    dut.Start <= 1
+
+    # dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+
     for transaction in A():
         yield tb.input_driver_A._driver_send(transaction)
     
     for transaction in B():
         yield tb.input_driver_B._driver_send(transaction)
 
+    # dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+
+
     # We're not using a driver on Start or Rst yet, since we're not doing tests on those yet.
     DoneFlag = 0
+    
+    yield clk_edge
+    dut.Start <= 0
 
     for i in range(10):
         if dut.Done:
             DoneFlag = 1
             break
         yield clk_edge
+    
+    # dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     if DoneFlag:
         dut._log.info("Done flag raised")
     else:
         raise TestFailure("No done flag here")
+
 
     # Stop generation of input data. One more clock cycle is needed to capture
     # the resulting output of the DUT.

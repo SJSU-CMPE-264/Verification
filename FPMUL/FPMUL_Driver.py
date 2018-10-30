@@ -31,7 +31,7 @@ class FPMUL_OperandDriver(BusDriver):
         BusDriver.__init__(self, entity, name, clock)
 
     @coroutine
-    def _driver_send(self, transaction, sync=False):
+    def _driver_send(self, transaction, sync=True):
         '''
         ntwong0
         Transaction must be binaryValue, otherwise we can't properly send it to dut
@@ -39,18 +39,18 @@ class FPMUL_OperandDriver(BusDriver):
         # sign, exponent, mantissa = self.generator()
         # return IEEE(sign, exponent, mantissa)
         '''
-        if sync:
-            yield RisingEdge(self.clock)
+        # if sync:
+        #     yield RisingEdge(self.clock)
 
         word = BinaryValue(0, bits=32, bigEndian=False)
-        self.log.info(transaction.floatToStr())
         word.binstr = transaction.floatToStr()
-        self.log.info("word: %s", word.binstr)
         if hasattr(self.bus, "A"):
             self.bus.A <= word
-            self.log.info("_driver_send %s",self.bus.A.value)
+            self.log.info("_driver_send will send: %s",word)
         else:
             self.bus.B <= word
-            self.log.info("_driver_send %s",self.bus.B.value)
+            self.log.info("_driver_send will send: %s",word)
+
+        yield RisingEdge(self.clock)
         
 
