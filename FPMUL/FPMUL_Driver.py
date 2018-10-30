@@ -3,6 +3,7 @@ from cocotb.decorators import coroutine
 
 from IEEE754 import IEEE754
 from cocotb.binary import BinaryValue
+from cocotb.triggers import RisingEdge
 
 """
 ntwong0
@@ -30,7 +31,7 @@ class FPMUL_OperandDriver(BusDriver):
         BusDriver.__init__(self, entity, name, clock)
 
     @coroutine
-    def _driver_send(self, transaction, sync=True):
+    def _driver_send(self, transaction, sync=False):
         '''
         ntwong0
         Transaction must be binaryValue, otherwise we can't properly send it to dut
@@ -41,8 +42,15 @@ class FPMUL_OperandDriver(BusDriver):
         if sync:
             yield RisingEdge(self.clock)
 
-        word = BinaryValue(bits=32, bigEndian=False)
-        word.binstr = transaction
-        self.bus <= transaction
-        self.log.info("_driver_send %s",self.bus)
+        word = BinaryValue(0, bits=32, bigEndian=False)
+        self.log.info(transaction.floatToStr())
+        word.binstr = transaction.floatToStr()
+        self.log.info("word: %s", word.binstr)
+        if hasattr(self.bus, "A"):
+            self.bus.A <= word
+            self.log.info("_driver_send %s",self.bus.A.value)
+        else:
+            self.bus.B <= word
+            self.log.info("_driver_send %s",self.bus.B.value)
+        
 

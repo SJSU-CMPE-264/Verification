@@ -29,8 +29,4 @@ class FPMUL_OutputMonitor(Monitor):
                             DNF  = int(self.dut.DNF),
                             ZF   = int(self.dut.ZF)
                         )
-            '''
-            ntwong0
-            It seems that the OutputMonitor is sending data even though it's not supposed to
-            #     self._recv(product)
-            '''
+                self._recv(product)

@@ -2,7 +2,7 @@ from IEEE754 import IEEE754
 
 from FPMUL_InputMonitor import FPMUL_InputMonitor
 from FPMUL_OutputMonitor import FPMUL_OutputMonitor
-from FPMUL_Scoreboard import FPMUL_Scoreboard
+from FPMUL_Scoreboard import FPMUL_Scoreboard as Scoreboard
 from FPMUL_Driver import FPMUL_OperandDriver
 from FPMUL_Generator import FPMUL_Generator
 
@@ -12,7 +12,7 @@ from cocotb.drivers import BitDriver
 from cocotb.binary import BinaryValue
 from cocotb.regression import TestFactory
 
-from cocotb.scoreboard import Scoreboard
+# from cocotb.scoreboard import Scoreboard
 from cocotb.generators.byte import random_data, get_bytes
 from cocotb.clock import Clock
 
@@ -132,9 +132,10 @@ def run_test(dut, A, B):
     # We're not using a driver on Start or Rst yet, since we're not doing tests on those yet.
     DoneFlag = 0
 
-    for i in range(5):
+    for i in range(10):
         if dut.Done:
             DoneFlag = 1
+            break
         yield clk_edge
 
     if DoneFlag:
