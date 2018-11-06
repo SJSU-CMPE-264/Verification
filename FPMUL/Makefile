@@ -5,7 +5,7 @@ TOPLEVEL_LANG ?=verilog
 
 # VERILOG_SOURCES = $(wildcard $(WPWD)/../../Design/FPMUL/FPMUL.v)
 # VERILOG_SOURCES = /home/vagrant/code/Design/FPMUL/FPMUL.v
-VERILOG_SOURCES = /home/vagrant/Verification/FPMUL/FPMUL_dummy.v
+VERILOG_SOURCES = /home/vagrant/code/Validation/FPMUL/FPMUL_dummy.v
 
 TOPLEVEL=FPMUL
 MODULE=FPMUL_TB

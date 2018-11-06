@@ -1,20 +1,25 @@
-import numpy as np
 import struct
+import numpy as np
 
 class IEEE754:      
     def __init__(self, *args, **kwargs):
         if len(args) == 1:
             value = args[0]
             if isinstance(value, str):
-                self.float = IEEE754.strToFloat(value)
-            elif isinstance(value, float) or isinstance(value, int) or isinstance(value, np.float32):
-                self.float = np.float3 -2(value)
+                self.sign, self.exponent, self.mantissa = IEEE754.strToBits(value)
             else:
-                self.float = np.float32(0)
+                self.sign, self.exponent, self.mantissa = 0, 0, 0
         elif len(args) == 3:
-            self.float = IEEE754.bitsToFloat(args[0], args[1], args[2])
+            self.sign, self.exponent, self.mantissa = args
         else:
-            self.float = np.float32(0)
+            self.sign, self.exponent, self.mantissa = 0, 0, 0
+        
+        if self.sign not in range(0, 2 ** 1):
+            raise ValueError("Sign Bit is Out of Range")
+        elif self.exponent not in range(2 ** 8):
+            raise ValueError("Exponent is Out of Range")
+        elif self.mantissa not in range(2 ** 23):
+            raise ValueError("Mantissa is Out of Range")
         
         self.flags = {
             "OF":   False,
@@ -41,19 +46,11 @@ class IEEE754:
         low  = product & ((2 ** length) - 1)
         return high, low
     
-    @staticmethod
-    def bitsToStr(sign, exponent, mantissa):
-        return "{:01b}{:08b}{:023b}".format(sign, exponent, mantissa)
+    def bitsToStr(self):
+        return "{:01b}{:08b}{:023b}".format(self.sign, self.exponent, self.mantissa)
     
-    @staticmethod
-    def bitsToFloat(sign, exponent, mantissa):
-        if sign not in range(0, 2 ** 1):
-            raise ValueError("Sign Bit is Out of Range")
-        elif exponent not in range(2 ** 8):
-            raise ValueError("Exponent is Out of Range")
-        elif mantissa not in range(2 ** 23):
-            raise ValueError("Mantissa is Out of Range")
-        return IEEE754.strToFloat(IEEE754.bitsToStr(sign, exponent, mantissa))
+    def bitsToFloat(self):
+        return IEEE754.strToFloat(self.bitsToStr())
     
     @staticmethod
     def strToBits(bin_str):
@@ -71,28 +68,16 @@ class IEEE754:
         bin_str = bin_str.lower().replace("z", "0").replace("x", "0")
         byte = struct.pack("<I", int(bin_str, 2))
         return np.frombuffer(byte, dtype=np.float32)[0]
-
-    def floatToStr(self):
-        mv      = np.getbuffer(self.float)
-        mv_str  = "".join(mv)
-        value   = struct.unpack("<I", mv_str)[0]
-        bin_str = "{:032b}".format(value)
-        return bin_str
-
-    def floatToBits(self):
-        return IEEE754.strToBits(self.floatToStr())
     
-    def setFlags(self):
-        _, exponent, mantissa = self.floatToBits()
-        
-        self.flags["NaNF"] = (exponent == 0xFF) and not (mantissa == 0)
-        self.flags["InfF"] = (exponent == 0xFF) and     (mantissa == 0)
-        self.flags["DNF" ] = (exponent == 0x00) and not (mantissa == 0)
-        self.flags["ZF"  ] = (exponent == 0x00) and     (mantissa == 0)
+    def setFlags(self):        
+        self.flags["NaNF"] = (self.exponent == 0xFF) and not (self.mantissa == 0)
+        self.flags["InfF"] = (self.exponent == 0xFF) and     (self.mantissa == 0)
+        self.flags["DNF" ] = (self.exponent == 0x00) and not (self.mantissa == 0)
+        self.flags["ZF"  ] = (self.exponent == 0x00) and     (self.mantissa == 0)
 
     def __mul__(self, rhs):        
-        signA, exponentA, mantissaA = self.floatToBits()
-        signB, exponentB, mantissaB = rhs.floatToBits()
+        signA, exponentA, mantissaA = self.sign, self.exponent, self.mantissa
+        signB, exponentB, mantissaB = rhs.sign, rhs.exponent, rhs.mantissa
         
         sign = signA ^ signB
         
@@ -174,10 +159,10 @@ class IEEE754:
         return IEEE754(sign, exponent & (2 ** 8 - 1), mantissa_H & (2 ** 23 - 1))
     
     def __eq__(self, rhs):
-        return ((self.float == rhs.float) or (np.isnan(self.float) and np.isnan(rhs.float))) and (self.flags == rhs.flags)
+        return ((self.bitsToStr() == rhs.bitsToStr())) and (self.flags == rhs.flags)
     
     def __ne__(self, rhs):
         return not (self == rhs)
     
     def __repr__(self):
-        return self.floatToStr()
+        return self.bitsToStr()
