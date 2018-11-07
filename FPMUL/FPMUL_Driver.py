@@ -40,15 +40,19 @@ class FPMUL_OperandDriver(BusDriver):
         '''
         # if sync:
         #     yield RisingEdge(self.clock)
+        A_transaction, B_transaction = transaction
 
-        word = BinaryValue(0, bits=32, bigEndian=False)
-        word.binstr = transaction.floatToStr()
-        if hasattr(self.bus, "A"):
-            self.bus.A <= word
-            self.log.info("_driver_send will send: %s",word)
-        else:
-            self.bus.B <= word
-            self.log.info("_driver_send will send: %s",word)
+        A = BinaryValue(0, bits=32, bigEndian=False)
+        B = BinaryValue(0, bits=32, bigEndian=False)
+        
+        A.binstr = A_transaction.bitsToStr()
+        B.binstr = B_transaction.bitsToStr()
+
+        self.bus.A <= A
+        self.bus.B <= B
+
+        self.log.info("_driver_send will send: %s", A)
+        self.log.info("_driver_send will send: %s", B)
 
         yield RisingEdge(self.clock)
         
