@@ -33,16 +33,15 @@ class FPMUL_TB(object):
         Since we're using BusDriver and Driver to drive the dut inputs, we don't
         need to use FPMUL_Driver()
 
-        # self.input_driver = FPMUL_Driver()
         """
-        self.input_driver_A     = FPMUL_OperandDriver(dut, "", dut.Clk, "A")
-        self.input_driver_B     = FPMUL_OperandDriver(dut, "", dut.Clk, "B")
+        self.input_driver = FPMUL_OperandDriver(dut, "", dut.Clk, ["A", "B"])
+
         # self.input_driver_Start = FPMUL_BusDriver(dut, "", dut.Clk, "Start")
         # self.input_driver_Rst   = FPMUL_BusDriver(dut, "", dut.Clk, "Rst")
         
         # Reconstruct the input transactions from the pins
         # and send them to our 'model'
-        self.input_monitor = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
+        self.input_monitor  = FPMUL_InputMonitor(dut, dut.Start, dut.Clk, callback=self.model)
         self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk, self.initSig)
         # self.output_monitor = FPMUL_OutputMonitor(dut, dut.Done, dut.Clk, callback=self.whywhywhy)
         
@@ -58,19 +57,8 @@ class FPMUL_TB(object):
         # if self.dut.Start is True:
         A, B = transaction
         product = A * B
-        """ 
-        ntwong0 - just append product, exclude A and B since we are not appending 
-            A or B in OutputMonitor
-        # self.dut._log.info("model is appending\n A: %s\n B: %s\n product: %s", A, B, product)
-        # self.expected_output.append((A, B, product))
-         """
         self.dut._log.info("model is appending product: %s", product)
         self.expected_output.append(product)
-    
-    # def whywhywhy(self, transaction):
-    #     self.dut._log.info("whyyyyyyyyy")
-    #     # if self.dut.Done is True:
-    #     self.observed_output.append((transaction))
 
     def start(self):
         """Start generation of input data."""
@@ -96,61 +84,22 @@ class FPMUL_TB(object):
     #     self.stopped = True
 
 # ==============================================================================
-# @cocotb.coroutine
-# def clock_gen(signal):
-#     """Generate the clock signal."""
-#     while True:
-#         signal <= 0
-#         yield Timer(5000) # ps
-#         signal <= 1
-#         yield Timer(5000) # ps
-
-# ==============================================================================
 @cocotb.coroutine
-def run_test(dut, A, B):
+def run_test(dut, Operands):
     """Setup testbench and run a test."""
     cocotb.fork(Clock(dut.Clk, 5000).start())
     initSig = [0]
     tb = FPMUL_TB(dut, initSig) # _monitor_recv() fired by both InMon and OutMon here
     clk_edge = RisingEdge(dut.Clk)
 
-    """
-    ntwong0
-    Wait no - don't do this; the driver is supposed to set the bits
-    run_test() shouldn't set the bits directly on the dut
-
-    # Apply random input data by input_gen via Driver for 100 clock cycle.
-    # tb.start()
-    dut.Start = 0
-
-    for lhs in A(): 
-        dut.A = int(lhs.floatToStr(), 2)
-    for rhs in B():
-        dut.B = int(rhs.floatToStr(), 2)
-    yield clk_edge
-    dut.Start = 1
-    yield clk_edge
-    while not dut.Done:
-        yield clk_edge
-    """
-
     yield tb.reset()
-    """
-    ntwong0 - the reason test_endian_swapper.py uses dut.stream_out_ready is to guard against 
-        the residual dut.Done. So, we need a similar signal here.
 
-        initSig: we declare this before FPMUL_TB, and we manipulate it here in run_test
-    """
-    initSig[0] = 1
-
+    initSig = 1
 
     dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
-    for transaction in A():
-        yield tb.input_driver_A._driver_send(transaction)
-
-    for transaction in B():
-        yield tb.input_driver_B._driver_send(transaction)
+    for transaction in Operands():
+        yield tb.input_driver._driver_send(transaction)
 
     dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
@@ -163,13 +112,13 @@ def run_test(dut, A, B):
 
     for i in range(10):
         dut._log.info("Iter %i, Done %i, cnt %i", i, dut.Done, dut.cnt)
-        dut._log.info("run_test initSig %i", initSig[0])
+        dut._log.info("run_test initSig %i", initSig)
         if dut.Done == 1: # ntwong0 - this comparison seems to be most effective
             DoneFlag = 1
             break
         yield clk_edge
     
-    initSig[0] = 0
+    initSig = 0
     dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     if DoneFlag:
@@ -179,35 +128,63 @@ def run_test(dut, A, B):
 
     yield clk_edge
 
-    # Stop generation of input data. One more clock cycle is needed to capture
-    # the resulting output of the DUT.
-    # tb.stop()
-
     # Print result of scoreboard.
     dut._log.info("about to raise scoreboard.result")
     raise tb.scoreboard.result
 
 # ==============================================================================
 # Register test.
+
+# FPMUL_Generator()
 factory = TestFactory(run_test)
 
-factory.add_option("A", [
-            FPMUL_Generator.randomFloat,
-            FPMUL_Generator.randomNormalFloat,
-            FPMUL_Generator.randomNanFloat,
-            FPMUL_Generator.randomDenormalizedFloat,
-            FPMUL_Generator.randomZeroFloat,
-            FPMUL_Generator.randomInfinityFloat
-        ]
-    )
+factory.add_option("Operands", [
+            # Constraint Output
+            # FPMUL_Generator.denormalizedProduct,
+            # FPMUL_Generator.infinityProduct,
+            # FPMUL_Generator.nanProduct,
+            # FPMUL_Generator.normalProduct,
+            # FPMUL_Generator.overflowProduct,
+            # FPMUL_Generator.underflowProduct,
+            # FPMUL_Generator.zeroProduct,
 
-factory.add_option("B", [
-            FPMUL_Generator.randomFloat,
-            FPMUL_Generator.randomNormalFloat,
-            FPMUL_Generator.randomNanFloat,
-            FPMUL_Generator.randomDenormalizedFloat,
-            FPMUL_Generator.randomZeroFloat,
-            FPMUL_Generator.randomInfinityFloat
+            # Random Output
+            FPMUL_Generator.randomFloat_and_randomFloat,
+            FPMUL_Generator.randomFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomFloat_and_randomNanFloat,
+            FPMUL_Generator.randomFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomFloat_and_randomInfinityFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomNanFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomNormalFloat_and_randomInfinityFloat,
+            FPMUL_Generator.randomNanFloat_and_randomFloat,
+            FPMUL_Generator.randomNanFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomNanFloat_and_randomNanFloat,
+            FPMUL_Generator.randomNanFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomNanFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomNanFloat_and_randomInfinityFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomNanFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomDenormalizedFloat_and_randomInfinityFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomNanFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomZeroFloat_and_randomInfinityFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomNormalFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomNanFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomDenormalizedFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomZeroFloat,
+            FPMUL_Generator.randomInfinityFloat_and_randomInfinityFloat
         ]
     )
 
