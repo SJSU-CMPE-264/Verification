@@ -51,8 +51,8 @@ class FPMUL_OperandDriver(BusDriver):
         self.bus.A <= A
         self.bus.B <= B
 
-        self.log.info("_driver_send will send: %s", A)
-        self.log.info("_driver_send will send: %s", B)
+        #self.log.info("_driver_send will send: %s", A)
+        #self.log.info("_driver_send will send: %s", B)
 
         yield RisingEdge(self.clock)
         

@@ -6,7 +6,7 @@ class FPMUL_Generator():
 
     initialized = False
     df = {}
-    file_names = ("denormalized", "infinity", "nan", "normal", "overflow", "underflow", "zero")
+    file_names = ("denormalized")
 
     def __init__(self):
         if not FPMUL_Generator.initialized:

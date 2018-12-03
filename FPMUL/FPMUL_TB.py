@@ -53,12 +53,12 @@ class FPMUL_TB(object):
         self.scoreboard.add_interface(self.output_monitor, self.expected_output)
 
     def model(self, transaction):
-        self.dut._log.info("model is called")
+        #self.dut._log.info("model is called")
         # if self.dut.Start is True:
         A, B = transaction
         product = A * B
-        self.dut._log.info("model is appending product: %s", product)
-        self.expected_output.append(product)
+        #self.dut._log.info("model is appending product: %s", product)
+        self.expected_output.append((A, B, product))
 
     def start(self):
         """Start generation of input data."""
@@ -66,13 +66,13 @@ class FPMUL_TB(object):
 
     @cocotb.coroutine
     def reset(self, duration=10000):
-        self.dut._log.info("Resetting DUT")
+        #self.dut._log.info("Resetting DUT")
         self.dut.Rst   <= 1
         self.dut.Start <= 0
         yield Timer(duration)
         yield RisingEdge(self.dut.Clk)
         self.dut.Rst   <= 0
-        self.dut._log.info("Out of reset")
+        #self.dut._log.info("Out of reset")
 
     # def stop(self):
     #     """
@@ -96,12 +96,12 @@ def run_test(dut, Operands):
 
     initSig = 1
 
-    dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    #dut._log.info("Before _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     for transaction in Operands():
         yield tb.input_driver._driver_send(transaction)
 
-    dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    #dut._log.info("After _driver_send: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
     # We're not using a driver on Start or Rst yet, since we're not doing tests on those yet.
     DoneFlag = 0
@@ -111,25 +111,23 @@ def run_test(dut, Operands):
     dut.Start <= 0
 
     for i in range(10):
-        dut._log.info("Iter %i, Done %i, cnt %i", i, dut.Done, dut.cnt)
-        dut._log.info("run_test initSig %i", initSig)
+        #dut._log.info("Iter %i, Done %i", i, dut.Done)
+        #dut._log.info("run_test initSig %i", initSig)
         if dut.Done == 1: # ntwong0 - this comparison seems to be most effective
             DoneFlag = 1
             break
         yield clk_edge
     
     initSig = 0
-    dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
+    # dut._log.info("After clock cycles: A is %s, B is %s, P is %s", dut.A, dut.B, dut.P)
 
-    if DoneFlag:
-        dut._log.info("Done flag raised")
-    else:
+    if not DoneFlag:
         raise TestFailure("No done flag here")
 
     yield clk_edge
 
     # Print result of scoreboard.
-    dut._log.info("about to raise scoreboard.result")
+    #dut._log.info("about to raise scoreboard.result")
     raise tb.scoreboard.result
 
 # ==============================================================================

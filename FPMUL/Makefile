@@ -1,11 +1,17 @@
 CWD=$(shell pwd)
 COCOTB=/home/vagrant/cocotb
+GA=/home/vagrant/group-awesome
+
+COCOTB_REDUCED_LOG_FMT = 1
 
 TOPLEVEL_LANG ?=verilog
 
 # VERILOG_SOURCES = $(wildcard $(WPWD)/../../Design/FPMUL/FPMUL.v)
 # VERILOG_SOURCES = /home/vagrant/code/Design/FPMUL/FPMUL.v
-VERILOG_SOURCES = /home/vagrant/code/Validation/FPMUL/FPMUL_dummy.v
+# VERILOG_SOURCES = /home/vagrant/code/Validation/FPMUL/FPMUL_dummy.v
+VERILOG_SOURCES = $(GA)/FPMul.v $(GA)/Mul.v $(GA)/Components.v $(GA)/AuxFlagGen.v
+
+EXTRA_OPTS = -v
 
 TOPLEVEL=FPMUL
 MODULE=FPMUL_TB
