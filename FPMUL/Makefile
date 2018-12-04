@@ -2,8 +2,6 @@ CWD=$(shell pwd)
 COCOTB=/home/vagrant/cocotb
 GA=/home/vagrant/group-awesome
 
-COCOTB_REDUCED_LOG_FMT = 1
-
 TOPLEVEL_LANG ?=verilog
 
 # VERILOG_SOURCES = $(wildcard $(WPWD)/../../Design/FPMUL/FPMUL.v)
@@ -18,6 +16,9 @@ MODULE=FPMUL_TB
 
 include $(COCOTB)/makefiles/Makefile.inc
 include $(COCOTB)/makefiles/Makefile.sim
+
+requirements: 
+	pip install -r requirements.txt
 
 # list all required Python files here
 sim: FPMUL_TB.py FPMUL_Driver.py FPMUL_Generator.py FPMUL_InputMonitor.py \
