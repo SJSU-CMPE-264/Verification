@@ -6,7 +6,10 @@ EXTRA_OPTS = -v
 TOPLEVEL=FPMUL
 MODULE=FPMUL_TB
 
-.PHONY : group-awesome-sources group-awesome group-one-sources group-one
+.PHONY : group-awesome-sources group-awesome group-one-sources group-one requirements
+
+requirements: 
+	pip install -r requirements.txt
 
 #####################
 ### GROUP AWESOME ###
