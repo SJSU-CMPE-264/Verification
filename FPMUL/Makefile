@@ -20,7 +20,7 @@ GA_SOURCES = $(GA)/FPMul.v $(GA)/Mul.v $(GA)/Components.v $(GA)/AuxFlagGen.v
 group-awesome-sources: 
 	$(eval export VERILOG_SOURCES=$(GA_SOURCES))
 
-group-awesome: | clean group-awesome-sources sim
+group-awesome: | requirements clean group-awesome-sources sim
 
 
 ###############
@@ -32,7 +32,7 @@ GONE_SOURCES = $(GONE)/FPMul.v $(GONE)/Mul.v $(GONE)/Components.v $(GONE)/AuxFla
 group-one-sources: 
 	$(eval export VERILOG_SOURCES=$(GA_SOURCES))
 
-group-one: | clean group-one-sources sim
+group-one: | requirements clean group-one-sources sim
 
 
 include $(COCOTB)/makefiles/Makefile.inc
