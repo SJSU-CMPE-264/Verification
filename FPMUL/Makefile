@@ -1,5 +1,4 @@
 CWD=$(shell pwd)
-COCOTB=/home/vagrant/cocotb
 
 TOPLEVEL_LANG ?=verilog
 EXTRA_OPTS = -v
