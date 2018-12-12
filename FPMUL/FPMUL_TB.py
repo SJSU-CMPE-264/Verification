@@ -133,18 +133,18 @@ def run_test(dut, Operands):
 # ==============================================================================
 # Register test.
 
-# FPMUL_Generator()
+FPMUL_Generator(10)
 factory = TestFactory(run_test)
 
 factory.add_option("Operands", [
             # Constraint Output
-            # FPMUL_Generator.denormalizedProduct,
-            # FPMUL_Generator.infinityProduct,
-            # FPMUL_Generator.nanProduct,
-            # FPMUL_Generator.normalProduct,
-            # FPMUL_Generator.overflowProduct,
-            # FPMUL_Generator.underflowProduct,
-            # FPMUL_Generator.zeroProduct,
+            FPMUL_Generator.denormalizedProduct,
+            FPMUL_Generator.infinityProduct,
+            FPMUL_Generator.nanProduct,
+            FPMUL_Generator.normalProduct,
+            FPMUL_Generator.overflowProduct,
+            FPMUL_Generator.underflowProduct,
+            FPMUL_Generator.zeroProduct,
 
             # Random Output
             FPMUL_Generator.randomFloat_and_randomFloat,

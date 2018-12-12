@@ -159,7 +159,27 @@ class IEEE754:
         return IEEE754(sign, exponent & (2 ** 8 - 1), mantissa_H & (2 ** 23 - 1))
     
     def __eq__(self, rhs):
-        return ((self.bitsToStr() == rhs.bitsToStr())) and (self.flags == rhs.flags)
+        equal = True
+        if self.flags == rhs.flags:
+            # Check That Flags Match the Product
+            equal &= self.flags["NaNF"] == ((self.exponent == 0xFF) and not (self.mantissa == 0))
+            equal &= self.flags["InfF"] == ((self.exponent == 0xFF) and     (self.mantissa == 0))
+            equal &= self.flags["DNF" ] == ((self.exponent == 0x00) and not (self.mantissa == 0))
+            equal &= self.flags["ZF"  ] == ((self.exponent == 0x00) and     (self.mantissa == 0))
+            
+            # Check That Flags Match the Product
+            equal &= rhs.flags["NaNF" ] == ((rhs.exponent == 0xFF)  and not (rhs.mantissa == 0))
+            equal &= rhs.flags["InfF" ] == ((rhs.exponent == 0xFF)  and     (rhs.mantissa == 0))
+            equal &= rhs.flags["DNF"  ] == ((rhs.exponent == 0x00)  and not (rhs.mantissa == 0))
+            equal &= rhs.flags["ZF"   ] == ((rhs.exponent == 0x00)  and     (rhs.mantissa == 0))
+
+            # If Normal Product, Check the Values Match
+            if not (self.flags["NaNF"] or self.flags["InfF"] or self.flags["DNF"] or self.flags["ZF"]):
+                equal &= self.bitsToStr() == rhs.bitsToStr()
+        else:
+            equal = False
+
+        return equal
     
     def __ne__(self, rhs):
         return not (self == rhs)
