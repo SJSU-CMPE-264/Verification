@@ -26,10 +26,10 @@ group-awesome: | requirements clean group-awesome-sources sim
 ### GROUP 1 ###
 ###############
 GONE=../group-1
-GONE_SOURCES = $(GONE)/FPMul.v $(GONE)/Mul.v $(GONE)/Components.v $(GONE)/AuxFlagGen.v
+GONE_SOURCES = $(GONE)/fpmul.v $(GONE)/fpmul_cu.v $(GONE)/fpmul_dp.v
 
 group-one-sources: 
-	$(eval export VERILOG_SOURCES=$(GA_SOURCES))
+	$(eval export VERILOG_SOURCES=$(GONE_SOURCES))
 
 group-one: | requirements clean group-one-sources sim
 
