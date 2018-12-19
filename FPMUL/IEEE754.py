@@ -48,7 +48,10 @@ class IEEE754:
     
     def bitsToStr(self):
         return "{:01b}{:08b}{:023b}".format(self.sign, self.exponent, self.mantissa)
-    
+ 
+    def bitsToInt(self):
+        return int(self.bitsToStr(), 2)
+ 
     def bitsToFloat(self):
         return IEEE754.strToFloat(self.bitsToStr())
     
